@@ -5,7 +5,7 @@
 #include <ch32v20x_gpio.h>
 #include "usbd_core.h"
 #include "usb_descriptors.h"
-#include "lsejtag_impl.h"
+#include "lsejtag_port.h"
 #include "lsejtag/lsejtag_impl.h"
 #include "hwdef.h"
 
@@ -104,13 +104,32 @@ void lsejtag_impl_usbtx(const uint8_t *data, uint32_t len) {
 void lsejtag_impl_io_manip(lsejtag_impl_io io, uint8_t level) {
     switch (io) {
     case impl_io_led:
-
+        if (level) {
+            ACTIVITY_LED_ON;
+        } else {
+            ACTIVITY_LED_OFF;
+        }
         break;
     case impl_io_trst:
+        if (level) {
+            EJTAG_TRST_GPIO->BSHR = EJTAG_TRST_PIN;
+        } else {
+            EJTAG_TRST_GPIO->BSHR = (EJTAG_TRST_PIN << 16);
+        }
         break;
     case impl_io_brst:
+        if (level) {
+            EJTAG_BRST_GPIO->BSHR = EJTAG_BRST_PIN;
+        } else {
+            EJTAG_BRST_GPIO->BSHR = (EJTAG_BRST_PIN << 16);
+        }
         break;
     case impl_io_dint:
+        if (level) {
+            EJTAG_DINT_GPIO->BSHR = EJTAG_DINT_PIN;
+        } else {
+            EJTAG_DINT_GPIO->BSHR = (EJTAG_DINT_PIN << 16);
+        }
         break;
     default:
         break;
@@ -149,7 +168,8 @@ void lsejtag_impl_run_jtag(const uint32_t *tdi_buf, const uint32_t *tms_buf, uin
     uint32_t tdi_reg, tms_reg, tdo_reg = 0;
     uint32_t tdo_counter = 0;
 
-    ACTIVITY_LED_ON;
+    // Ask the LED to be illuminated
+    ejtag_ctx.led_turn_on = true;
 
     // printf("RUN_JTAG: Buf%c, TDI/TMS Len % 2d, TDO Len % 2d, TDO Skip % 2d\r\n",
     //        BufId(), tdi_bits, tdo_bits, tdo_skip_bits);
@@ -267,7 +287,5 @@ void lsejtag_impl_run_jtag(const uint32_t *tdi_buf, const uint32_t *tms_buf, uin
     lsejtag_jtag_complete_tdi(&lsejtag_lib_ctx);
     lsejtag_jtag_complete_tms(&lsejtag_lib_ctx);
     lsejtag_jtag_complete_tdo(&lsejtag_lib_ctx, ((tdo_counter + 31) >> 5));
-
-    ACTIVITY_LED_OFF;
 }
 #pragma GCC pop_options

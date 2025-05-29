@@ -17,6 +17,7 @@ void HardFault_Handler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
 void USB_LP_CAN1_RX0_IRQHandler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
 void USB_HP_CAN1_TX_IRQHandler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
 void USBWakeUp_IRQHandler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
+void SysTick_Handler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
 
 /*********************************************************************
  * @fn      NMI_Handler
@@ -59,4 +60,11 @@ void USB_HP_CAN1_TX_IRQHandler(void) {
 
 void USBWakeUp_IRQHandler(void) {
 	EXTI_ClearITPendingBit(EXTI_Line18);
+}
+
+void SysTick_Handler(void) {
+  extern uint32_t systick_counter;
+  ++systick_counter;
+  SysTick->SR &= 0xFFFFFFFE; // Clear interrupt
+  SysTick->CTLR |= (1 << 5); // Update SysTick counter (WHY MANUALLY?)
 }

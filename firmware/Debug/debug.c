@@ -27,8 +27,18 @@ static uint16_t p_ms = 0;
  */
 void Delay_Init(void)
 {
-    p_us = SystemCoreClock / 8000000;
-    p_ms = (uint16_t)p_us * 1000;
+    // p_us = SystemCoreClock / 8000000;
+    // p_ms = (uint16_t)p_us * 1000;
+
+    // Initialize global counter
+    extern volatile uint32_t systick_counter;
+    systick_counter = 0;
+
+    SysTick->CMP = SystemCoreClock / 8000;
+    SysTick->CTLR |= (1 << 4); // Count down
+    SysTick->CTLR |= (1 << 5) | (1 << 1) | (1 << 0); // Enable counter and SysTick interrupt
+
+    NVIC_EnableIRQ(SysTicK_IRQn);
 }
 
 /*********************************************************************
@@ -68,15 +78,19 @@ void Delay_Ms(uint32_t n)
 {
     uint32_t i;
 
-    SysTick->SR &= ~(1 << 0);
-    i = (uint32_t)n * p_ms;
+    // SysTick->SR &= ~(1 << 0);
+    // i = (uint32_t)n * p_ms;
 
-    SysTick->CMP = i;
-    SysTick->CTLR |= (1 << 4);
-    SysTick->CTLR |= (1 << 5) | (1 << 0);
+    // SysTick->CMP = i;
+    // SysTick->CTLR |= (1 << 4);
+    // SysTick->CTLR |= (1 << 5) | (1 << 0);
 
-    while((SysTick->SR & (1 << 0)) != (1 << 0));
-    SysTick->CTLR &= ~(1 << 0);
+    // while((SysTick->SR & (1 << 0)) != (1 << 0));
+    // SysTick->CTLR &= ~(1 << 0);
+
+    extern volatile uint32_t systick_counter;
+    i = systick_counter;
+    while (i + n != systick_counter);
 }
 
 /*********************************************************************

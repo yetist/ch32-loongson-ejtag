@@ -21,7 +21,8 @@
 #include <ch32v20x_usb.h>
 #include <ch32v20x_rcc.h>
 #include <ch32v20x_gpio.h>
-#include "lsejtag_impl.h"
+#include "lsejtag_port.h"
+#include "lsejtag/lsejtag_impl.h"
 #include "hwdef.h"
 #include "debug.h"
 #include "usb_descriptors.h"
@@ -33,6 +34,7 @@
 /* Global Variable */
 lsejtag_ctx lsejtag_lib_ctx;
 ejtag_ctx_t ejtag_ctx;
+volatile uint32_t systick_counter;
 
 /* Global function declaration */
 void init_hardware();
@@ -94,24 +96,25 @@ int main(void)
 ////////////////////////////////////////////////////////////////////////////////
 
 void led_task() {
-    // TODO: WCH didnt give us a systick counter, we need to implement it
     // LED illumination logic
-    // if (ejtag_ctx.led_turn_on) {
-    //     ejtag_ctx.led_turn_on = 0;
-    //     ejtag_ctx.led_timer_us = 
-    //     *ejtag_ctx.ws2812_write_addr = 0x10200000;
-    //     return;
-    // }
+    if (ejtag_ctx.led_turn_on) {
+        // Start timing and turn on
+        ejtag_ctx.led_turn_on = 0;
+        ejtag_ctx.led_timer_ms = systick_counter;
+        lsejtag_impl_io_manip(impl_io_led, 1);
+        return;
+    }
 
-    // if (ejtag_ctx.led_timer_us == 0) {
-    //     return;
-    // }
+    if (ejtag_ctx.led_timer_ms == 0) {
+        return;
+    }
 
-    // // 300ms
-    // if (time_us_32() - ejtag_ctx.led_timer_us >= 300000) {
-    //     *ejtag_ctx.ws2812_write_addr = 0x00200000;
-    //     ejtag_ctx.led_timer_us = 0;
-    // }
+    // 300ms
+    if (systick_counter - ejtag_ctx.led_timer_ms >= 300) {
+        // TURN OFF
+        lsejtag_impl_io_manip(impl_io_led, 0);
+        ejtag_ctx.led_timer_ms = 0;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
