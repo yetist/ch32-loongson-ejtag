@@ -165,13 +165,13 @@ void init_gpio() {
 
     // Pull reset pins high
     GPIO_SetBits(EJTAG_TRST_GPIO, EJTAG_TRST_PIN);
-    GPIO_ResetBits(EJTAG_BRST_GPIO, EJTAG_BRST_PIN);
+    GPIO_SetBits(EJTAG_BRST_GPIO, EJTAG_BRST_PIN);
     
     // Put other pints low
     GPIO_ResetBits(EJTAG_TDI_GPIO, EJTAG_TDI_PIN);
     GPIO_ResetBits(EJTAG_TMS_GPIO, EJTAG_TMS_PIN);
     GPIO_ResetBits(EJTAG_TCK_GPIO, EJTAG_TCK_PIN);
-    GPIO_SetBits(EJTAG_DINT_GPIO, EJTAG_DINT_PIN);
+    GPIO_ResetBits(EJTAG_DINT_GPIO, EJTAG_DINT_PIN);
 
     // Input group: TDO
     gpioInit.GPIO_Mode = GPIO_Mode_IN_FLOATING;
