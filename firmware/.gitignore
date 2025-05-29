@@ -1,0 +1,8 @@
+.mrs/launch.json
+
+*.d
+*.o
+*.elf
+*.hex
+*.lst
+*.map
