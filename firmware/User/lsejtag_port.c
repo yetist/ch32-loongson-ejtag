@@ -10,6 +10,8 @@
 #include "hwdef.h"
 
 #define NOP asm volatile ("nop")
+#define NOPx2 NOP; NOP
+#define NOPx4 NOP; NOP; NOP; NOP
 #define ASSERT_TDI EJTAG_TDI_GPIO->BSHR = EJTAG_TDI_PIN
 #define DEASSERT_TDI EJTAG_TDI_GPIO->BSHR = (EJTAG_TDI_PIN << 16)
 #define ASSERT_TMS EJTAG_TMS_GPIO->BSHR = EJTAG_TMS_PIN
@@ -144,11 +146,13 @@ void lsejtag_impl_reconfigure(lsejtag_impl_recfg type, uint32_t param) {
     }
 
     case impl_recfg_tdo_sample_time:
+        // This one is useless in our implementation
+        // Plus, a valid JTAG implementation won't need this adjustment either
         break;
     }
 }
 
-#define HUGE_DELAY //Delay_Us(20)
+#define HUGE_DELAY_FOR_DBG //Delay_Us(20)
 
 static inline char BufId() {
     if (lsejtag_lib_ctx.active_bufblk == &lsejtag_lib_ctx.jtagbuf_a) {
@@ -202,17 +206,13 @@ void lsejtag_impl_run_jtag(const uint32_t *tdi_buf, const uint32_t *tms_buf, uin
             tms_reg >>= 1;
 
             // Assert CLK
-            HUGE_DELAY;
+            HUGE_DELAY_FOR_DBG;
             ASSERT_TCK;
             // Check if TDO should be captured
             if (tdo_skip_bits) {
                 --tdo_skip_bits;
-                NOP;
-                NOP;
-                NOP;
-                NOP;
-                NOP;
-                NOP;
+                NOPx4;
+                NOPx2;
                 NOP;
             } else if (tdo_counter < tdo_bits) {
                 ++tdo_counter;
@@ -222,47 +222,17 @@ void lsejtag_impl_run_jtag(const uint32_t *tdi_buf, const uint32_t *tms_buf, uin
                 tdo_reg |= CAPTURE_TDO;
 
                 // ASSERT_TDO;
-                // NOP;
-                // NOP;
-                // NOP;
-                // NOP;
+                // NOPx4;
                 // DEASSERT_TDO;
             }
 
-            HUGE_DELAY;
-            HUGE_DELAY;
+            HUGE_DELAY_FOR_DBG;
+            HUGE_DELAY_FOR_DBG;
             
-            NOP;
-            NOP;
-            NOP;
-            NOP;
-            NOP;
-            NOP;
-            NOP;
-            NOP;
-            NOP;
-            NOP;
-            NOP;
-            NOP;
-            NOP;
-            NOP;
-            NOP;
-            NOP;
-            NOP;
-            NOP;
-            NOP;
-            NOP;
-            NOP;
-            NOP;
-            NOP;
-            NOP;
-            NOP;
-            NOP;
-            NOP;
-            NOP;
-            NOP;
-            NOP;
-            NOP;
+            NOPx4; NOPx4;
+            NOPx4; NOPx4;
+            NOPx4; NOPx4;
+            NOPx4; NOPx4;
 
             // Deassert CLK
             DEASSERT_TCK;
@@ -273,7 +243,7 @@ void lsejtag_impl_run_jtag(const uint32_t *tdi_buf, const uint32_t *tms_buf, uin
                 ++tdo_buf;
             }
             
-            HUGE_DELAY;
+            HUGE_DELAY_FOR_DBG;
         }
         tdi_bits -= 32;
     }
